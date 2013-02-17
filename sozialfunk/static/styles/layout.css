@@ -1,0 +1,92 @@
+.rounded {
+  -webkit-border-radius: 5px;
+     -moz-border-radius: 5px;
+          border-radius: 5px;
+          background: #eee;
+          padding:10px;
+          padding-bottom:20px;
+          margin-bottom:30px;
+          position:relative;
+          overflow:hidden;
+}
+
+.rounded h3
+{
+    text-align:center;
+    font-weight:lighter;
+    margin:0;
+    margin-bottom:10px;
+}
+
+.score_left p
+{
+    margin-top:0;
+    padding-top:0;
+    min-height:100px;
+}
+
+h3.subtitle
+{
+    text-align:center;
+    font-weight:lighter;
+    margin-top:0;
+    font-size:1.2em;
+}
+
+p.teaser
+{
+    font-size:1.4em;
+    width: 80%;
+    min-width:400px;
+}
+
+.centered h2
+{
+    text-align:center;
+    font-weight:lighter;
+}
+
+.rounded p.icon
+{
+    position:absolute;
+    right:0;
+    top:0;
+    font-family: entypo;
+    font-size:320px;
+    margin-top:0;
+    color:#ddd;
+    z-index:1;
+}
+
+span.menu_icon
+{
+    font-family: entypo;
+}
+
+.rounded .on_top
+{
+    position:relative;
+    z-index:2;
+}
+
+.score_left p,
+.score_right p
+{
+}
+    
+@font-face {
+	font-family: 'entypo';
+	src: url('/static/fonts/entypo/entypo.eot'); /* IE9 Compat Modes */
+	src: url('/static/fonts/entypo/entypo.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
+	     url('/static/fonts/entypo/entypo.woff') format('woff'), /* Modern Browsers */
+	     url('/static/fonts/entypo/entypo.ttf')  format('truetype'), /* Safari, Android, iOS */
+	     url('/static/fonts/entypo/entypo.svg#svgFontName') format('svg'); /* Legacy iOS */
+	}
+    
+ body {
+    padding: 10px;
+}
+
+.row-fluid .rounded {
+    min-height:100%;
+}

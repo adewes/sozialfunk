@@ -1,0 +1,13 @@
+{% extends "layouts/smallbox.html" %}
+{% load i18n %}
+
+{%block title%}{%if title %}{{title}}{%else%}Information{%endif%}{%endblock%}
+
+{% block content %}
+
+<p>
+	{{text|safe}}
+</p>
+
+{% endblock %}
+

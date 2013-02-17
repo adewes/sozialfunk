@@ -1,0 +1,18 @@
+{% load capture_as %}
+{% load i18n %}
+{%captureas subject %}{%block subject %}{%endblock%}{%endcaptureas%}
+{% captureas text_content %}{%block text_content %}{%endblock%}{%endcaptureas%}
+{% captureas html_content %}{%block html_content %}{%endblock%}{%endcaptureas%}
+
+{%captureas html %}
+<h1>Sozialer Funke</h1>
+<div style="margin-left:20px;">{{html_content|safe}}</div>
+{% endcaptureas %}
+
+{%captureas text %}{{text_content|safe}}
+
+Viele Grüße,
+Andreas von "Sozialer Funke".
+{% endcaptureas %}
+
+{%captureas attachements %}{%block attachements %}{% endblock %}{%endcaptureas %}

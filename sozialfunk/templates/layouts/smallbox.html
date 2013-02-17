@@ -1,0 +1,25 @@
+{% extends "layouts/base.html" %}
+{%load captureas %}
+{%captureas content_2 %}{%block content_2%}{%endblock%}{%endcaptureas%}
+{%block styles %}
+
+#body .container
+{
+    width:auto;
+    max-width:640px;
+}
+{%endblock%}
+
+{%block body_content %}
+<div class="row-fluid">
+  <!-- Main hero unit for a primary marketing message or call to action -->
+  <div class="hero-unit" style="background:#eee;">
+    {%block content %}{%endblock%}
+  </div>
+  {%if content_2 %}
+  <div class="hero-unit" style="background:#eee;">
+    {{content_2|safe}}
+  </div>
+  {%endif%}
+</div>
+{%endblock%}

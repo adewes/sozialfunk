@@ -1,0 +1,12 @@
+{% extends "layouts/base.html" %}
+
+{%block content %}
+{{tweets.count}} tweets so far.
+<ul>
+    {%for tweet in tweets %}
+        <li>
+            {{tweet.twitter_data.text}}
+        </li>
+    {%endfor%}
+</ul>
+{%endblock%}

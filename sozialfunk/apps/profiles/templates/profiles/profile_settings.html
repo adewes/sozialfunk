@@ -1,0 +1,7 @@
+{%extends "layouts/base.html" %}
+{%block title%}Test{%endblock%}
+
+{%block content %}
+    <h2>Test</h2>
+    {{request.user.profile.twitter_screen_name}}
+{%endblock%}

@@ -1,0 +1,1 @@
+from sozialfunk.settings import *
