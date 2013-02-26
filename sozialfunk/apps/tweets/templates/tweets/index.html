@@ -1,12 +1,148 @@
 {% extends "layouts/base.html" %}
+{% load tweets %}
+{%block head_extra%}
+<script lang="text/javascript" src="/static/js/scrollbar/tiny_scrollbar.js" charset="utf-8"></script>
+<script lang="text/javascript">
+
+function get_tweet(tweet_id)
+{
+    var jqxhr = $.ajax({
+        url:"{% url tweets.views.get_tweet %}"+tweet_id,
+        data:{},
+        type:'GET',
+        dataType:'json'}).done(function(data) {
+        if (data['status'] = 200)
+        {
+            $("#tweet-"+tweet_id).children(".details")[0].innerHTML = data['html'];
+        } 
+    }
+    )
+}
+
+function upvote_tweet(tweet_id)
+{
+
+    var jqxhr = $.ajax({
+        url:"{% url tweets.views.upvote %}"+tweet_id,
+        data:{},
+        type:'GET',
+        dataType:'json'})
+        .done(function(data) {
+        if (data['status'] = 200)
+        {
+            $("#tweet-upvote-"+tweet_id).html("<a href=\"{% url tweets.views.undo_upvote %}"+tweet_id+"\" onclick=\"undo_upvote_tweet('"+tweet_id+"');return false;\"><i class=\"icon-thumbs-up icon-2x\" style=\"color:#0a0\"></i></a>");
+        }
+    }
+    )
+}
+
+{%if request.user.is_staff %}
+function add_to_category(tweet_id,category)
+{
+    var jqxhr = $.ajax({
+        url:"{% url tweets.views.add_to_category %}"+tweet_id+"/"+category,
+        data:{},
+        type:'GET',
+        dataType:'json'})
+    .done(function(data) {
+        if (data['status'] = 200)
+        {
+            $("#tweet-"+tweet_id+"-"+category).html("<a href=\"{% url tweets.views.remove_from_category %}"+tweet_id+"/"+category+"\" onclick=\"remove_from_category('"+tweet_id+"','"+category+"');return false;\"><span class=\"label label-success\">"+category+"</span></a>");
+        }
+    }
+    )
+}
+
+function remove_from_category(tweet_id,category)
+{
+    var jqxhr = $.ajax({
+        url:"{% url tweets.views.remove_from_category %}"+tweet_id+"/"+category,
+        data:{},
+        type:'GET',
+        dataType:'json'})
+    .done(function(data) {
+        if (data['status'] = 200)
+        {
+            $("#tweet-"+tweet_id+"-"+category).html("<a href=\"{% url tweets.views.add_to_category %}"+tweet_id+"/"+category+"\" onclick=\"add_to_category('"+tweet_id+"','"+category+"');return false;\"><span class=\"label\">"+category+"</span></a>");
+        }
+    }
+    )
+}
+{%endif%}
+
+function undo_upvote_tweet(tweet_id)
+{
+    var jqxhr = $.ajax({
+        url:"{% url tweets.views.undo_upvote %}"+tweet_id,
+        data:{},
+        type:'GET',
+        dataType:'json'})
+    .done(function(data) {
+        if (data['status'] = 200)
+        {
+            $("#tweet-upvote-"+tweet_id).html("<a href=\"{% url tweets.views.upvote %}"+tweet_id+"/+\" onclick=\"upvote_tweet('"+tweet_id+"');return false;\"><i class=\"icon-thumbs-up icon-2x\"></i></a>");
+        }
+    }
+    )
+}
+
+</script>
+{%endblock%}
 
 {%block content %}
-{{tweets.count}} tweets so far.
-<ul>
-    {%for tweet in tweets %}
-        <li>
-            {{tweet.twitter_data.text}}
-        </li>
-    {%endfor%}
-</ul>
+<div class="row-fluid">
+    <div class="span12">
+        <div class="btn-group">
+          <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+            Kategorien: {%if selected_category %}{{selected_category}}{%else%} Alle{%endif%}
+            <span class="caret"></span>
+          </a>
+          <ul class="dropdown-menu">
+                {%if selected_category %}<li><a href="{% url tweets.views.index %}">Alle anzeigen</a></li>{%endif%}
+            {% for category in categories%}
+                <li><a href="{% url tweets.views.index category %}">{{category}}</a></li>
+            {%endfor%}
+          </ul>
+        </div>
+    </div>
+</div>
+<div class="row-fluid">
+    <div class="span12">
+        {%for tweet in tweets %}
+            <div class="tweet" id="tweet-{{tweet.id}}">
+                <p class="text">
+                    <img src="{{tweet.twitter_data.user.profile_image_url}}" />
+                    <span class="name">{%if tweet.twitter_data.user.url %}<a href="{{tweet.twitter_data.user.url}}">{{tweet.twitter_data.user.name}}</a>{%else%}{{tweet.twitter_data.user.name}}{%endif%}</span>
+                    {{tweet|get_html|safe}}
+                    <span class="menu-right" id="tweet-upvote-{{tweet.id}}">
+                        {%if request.user.profile.twitter_screen_name in tweet.upvote_users%}
+                            <a href="{% url tweets.views.undo_upvote tweet.id %}" onclick="undo_upvote_tweet('{{tweet.id}}');return false;"><i class="icon-thumbs-up icon-2x" style="color:#0a0"></i></a>
+                        {% else %}
+                            <a href="{% url tweets.views.upvote tweet.id %}" onclick="upvote_tweet('{{tweet.id}}');return false;"><i class="icon-thumbs-up icon-2x"></i></a>
+                        {% endif %}
+                    </span>
+                </p>
+                <p class="infos">
+                    {{tweet.created_at|human_readable_elapsed_time}} ago. {%if tweet.upvotes %}{{tweet.upvotes}} upvotes.{%endif%}
+                        <a onclick="get_tweet('{{tweet.id}}');return false;"><i class="icon-chevron-down"></i></a>
+                    <br />
+                    {%for category in categories %}
+                        {%if request.user.is_staff %}
+                            {%if category in tweet.categories %}
+                                <span id="tweet-{{tweet.id}}-{{category}}"><a onclick="remove_from_category('{{tweet.id}}','{{category}}');return false;" href="{% url tweets.views.remove_from_category tweet.id category %}"><span class="label label-success">{{category}}</span></a></span>
+                            {%else%}
+                                <span id="tweet-{{tweet.id}}-{{category}}"><a onclick="add_to_category('{{tweet.id}}','{{category}}');return false;" href="{% url tweets.views.add_to_category tweet.id category %}"><span class="label">{{category}}</span></a></span>
+                            {%endif%}
+                        {%else%}
+                            {%if category in tweet.categories%}
+                                <span id="tweet-{{tweet.id}}-{{category}}"><span class="label label-success">{{category}}</span></span>
+                            {%endif%}
+                        {%endif%}
+                    {%endfor%}
+                </p>
+                <div class="details"></div>
+            </div>
+        {%endfor%}
+    </div>
+</div>
 {%endblock%}

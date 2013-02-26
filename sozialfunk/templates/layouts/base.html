@@ -28,6 +28,7 @@
     </style>
     
     <link href="/static/bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
+    <link href="/static/bootstrap/font-awesome/css/font-awesome.min.css" rel="stylesheet">
     <link rel="shortcut icon" href="/static/bootstrap/ico/favicon.ico">
     <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/static/bootstrap/ico/apple-touch-icon-144-precomposed.png">
     <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/static/bootstrap/ico/apple-touch-icon-114-precomposed.png">
@@ -38,6 +39,7 @@
 
     <script src="http://code.jquery.com/jquery-latest.js"></script>
     <script type="text/javascript" src="http://twitter.github.com/bootstrap/assets/js/bootstrap-dropdown.js"></script>
+    <script type="text/javascript" src="http://twitter.github.com/bootstrap/assets/js/bootstrap-affix.js"></script>
     <script type="text/javascript" src="http://twitter.github.com/bootstrap/assets/js/bootstrap-collapse.js"></script>
 
       {%block head_extra %}{%endblock%}
@@ -57,8 +59,6 @@
           <div class="nav-collapse">
             <ul class="nav">
               {%if request.user.is_authenticated %}
-              <li><a href="">Challenges</a></li>
-              <li><a href="">Offers</a></li>
               {% endif %}
             </ul>
             <ul class="nav pull-right">
@@ -69,13 +69,12 @@
                   <b class="caret"></b>
                 </a>
                 <ul class="dropdown-menu">
-                      <li><a href="{%url profiles.views.profile_settings %}">Settings</a></li>
-                      <li><a href="">Profile</a></li>
+                      <li><a href="{%url profiles.views.profile_settings %}">Einstellungen</a></li>
                   <li class="divider"></li>
-                  <li><a href="{%url profiles.views.logout %}">Logout</a></li>
+                  <li><a href="{%url profiles.views.logout %}">Abmelden</a></li>
                 </ul>
                 {%else%}
-                  <li><a href="{% url profiles.views.login %}">Login</a></li>
+                  <li><a href="{% url profiles.views.login %}">Anmelden oder Registrieren</a></li>
                 {% endif %}
               </li>
             </ul>

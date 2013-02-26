@@ -99,6 +99,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'djangoflash.middleware.FlashMiddleware',
+    'profiles.middleware.AcceptMiddleware',
 )
 
 ROOT_URLCONF = 'sozialfunk.urls'

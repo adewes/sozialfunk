@@ -1,92 +1,77 @@
-.rounded {
-  -webkit-border-radius: 5px;
-     -moz-border-radius: 5px;
-          border-radius: 5px;
-          background: #eee;
-          padding:10px;
-          padding-bottom:20px;
-          margin-bottom:30px;
-          position:relative;
-          overflow:hidden;
-}
-
-.rounded h3
+body,html
 {
-    text-align:center;
-    font-weight:lighter;
-    margin:0;
-    margin-bottom:10px;
+    min-height:100%;
+    min-width:100%;
 }
 
-.score_left p
+.tweet
 {
-    margin-top:0;
-    padding-top:0;
-    min-height:100px;
+    margin-top:10px;
+    border-top:1px dashed #aaa;
+    padding:15px 0 5px 0;
+    position:relative;
+    min-height:48px;
+    padding-right:50px;
 }
 
-h3.subtitle
-{
-    text-align:center;
-    font-weight:lighter;
-    margin-top:0;
-    font-size:1.2em;
-}
-
-p.teaser
-{
-    font-size:1.4em;
-    width: 80%;
-    min-width:400px;
-}
-
-.centered h2
-{
-    text-align:center;
-    font-weight:lighter;
-}
-
-.rounded p.icon
+.tweet span.menu-right
 {
     position:absolute;
     right:0;
-    top:0;
-    font-family: entypo;
-    font-size:320px;
+    top:20px;
+    width:40px;
+}
+
+.container
+{
+    max-width:800px;
+}
+
+.tweet i
+{
+    color:#bbb;
+}
+
+.green
+{
+    color:#0a0;
+}
+
+.tweet img
+{
+    position:absolute;
+    left:0;
+    width:48px;
+}
+
+.tweet span.name
+{
+    display:block;
+    font-weight:bolder;
+    font-size:0.9em;
+}
+
+.tweet p.infos
+{
     margin-top:0;
-    color:#ddd;
-    z-index:1;
+    color:#999;
+    font-size:0.9em;
 }
 
-span.menu_icon
+.tweet p.text,
+.tweet p.infos
 {
-    font-family: entypo;
+    margin:0;
+    margin-left:60px;
 }
 
-.rounded .on_top
-{
-    position:relative;
-    z-index:2;
-}
-
-.score_left p,
-.score_right p
-{
-}
-    
-@font-face {
-	font-family: 'entypo';
-	src: url('/static/fonts/entypo/entypo.eot'); /* IE9 Compat Modes */
-	src: url('/static/fonts/entypo/entypo.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
-	     url('/static/fonts/entypo/entypo.woff') format('woff'), /* Modern Browsers */
-	     url('/static/fonts/entypo/entypo.ttf')  format('truetype'), /* Safari, Android, iOS */
-	     url('/static/fonts/entypo/entypo.svg#svgFontName') format('svg'); /* Legacy iOS */
-	}
-    
- body {
-    padding: 10px;
-}
-
-.row-fluid .rounded {
-    min-height:100%;
+/* Tablet
+------------------------- */
+@media (min-width: 767px) {
+  #tweet-details {
+    position: fixed;
+    width: 45%;
+    overflow:auto;
+    height:auto;
+  }
 }

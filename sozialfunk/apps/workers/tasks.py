@@ -39,7 +39,7 @@ def update_followers():
 
     api = tweepy.API(auth)
 
-    followers_ids_cursor = tweepy.Cursor(api.followers_ids,screen_name = 'BarackObama')
+    followers_ids_cursor = tweepy.Cursor(api.followers_ids)
 
     followers_ids = []
 
@@ -52,8 +52,8 @@ def update_followers():
 
     print len(followers_ids)
 
-    obsolete_followers_ids = map(lambda x:x.id,tweets_models.Follower.collection.find({'id':{'$nin':followers_ids}}))
-    existing_followers_ids = map(lambda x:x.id,tweets_models.Follower.collection.find({'id':{'$in':followers_ids}}))
+    obsolete_followers_ids = map(lambda x:x['id'],tweets_models.Follower.collection.find({'id':{'$nin':followers_ids}}))
+    existing_followers_ids = map(lambda x:x['id'],tweets_models.Follower.collection.find({'id':{'$in':followers_ids}}))
     new_followers_ids = [id for id in followers_ids if id not in existing_followers_ids]
 
     print "%d obsolete followers, %d new followers and %d existing followers" % (len(obsolete_followers_ids),len(new_followers_ids),len(existing_followers_ids))
@@ -91,24 +91,6 @@ def update_friends():
     if len(tweets):
         preferences[since_id_key] = max(map(lambda x:x.id,tweets))
     preferences.save()
-
-def update_friends():
-    preferences = workers_models.Preferences.collection.find_one({'application':'followers'})
-
-    if not preferences:
-        preferences = workers_models.Preferences(application = 'followers')
-
-    auth = tweepy.OAuthHandler(global_settings.TWITTER.CONSUMER_KEY, global_settings.TWITTER.CONSUMER_KEY_SECRET)
-    auth.set_access_token(global_settings.TWITTER.ACCESS_TOKEN, global_settings.TWITTER.ACCESS_TOKEN_SECRET)
-
-    api = tweepy.API(auth)
-
-    print "Found %d new tweets" % len(tweets)
-
-    if len(tweets):
-        preferences[since_id_key] = max(map(lambda x:x.id,tweets))
-    preferences.save()
-
 
 @periodic_task(run_every=datetime.timedelta(seconds=60),default_retry_delay= 10)
 def update_timeline(timeline = 'home'):
@@ -163,6 +145,7 @@ def update_timeline(timeline = 'home'):
             tweet_instance = tweets_models.Tweet()
         tweet_instance['twitter_data'] = tweet.raw
         tweet_instance['id'] = tweet.id
+        tweet_instance['timeline'] = timeline
         tweet_instance['created_at'] = tweet.created_at
         tweet_instance['user_id'] = tweet.user.id
         tweet_instance['user_screen_name'] = tweet.user.screen_name.lower()
