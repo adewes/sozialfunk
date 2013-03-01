@@ -108,12 +108,13 @@ def twitter_callback(request):
     _directly_login_user(request,profile_user)
     return redirect(reverse(settings.DEFAULT_URL_AFTER_LOGIN))
     
-def login(request,email = None,next_url = ''):
+def login(request,next_url = ''):
     context = RequestContext(request)
     auth = tweepy.OAuthHandler(global_settings.TWITTER.CONSUMER_KEY,global_settings.TWITTER.CONSUMER_KEY_SECRET)
     try:
         redirect_url = auth.get_authorization_url()
     except tweepy.TweepError:
+        raise
         raise PermissionDenied
     request.session['request_token'] = (auth.request_token.key, auth.request_token.secret)
     return redirect(redirect_url+"&x_auth_access_type=read")

@@ -85,11 +85,32 @@ function undo_upvote_tweet(tweet_id)
     }
     )
 }
+{%if not request.session.info_box_dismissed %}
+function dismiss_info_box()
+{
+    var jqxhr = $.ajax({
+        url:"{% url tweets.views.dismiss_info_box %}",
+        data:{},
+        type:'GET',
+        dataType:'json'})
+    .done(function(data) {
+    }
+    );
+    $('.alert').alert('close');
+}
+{%endif%}
 
 </script>
 {%endblock%}
 
 {%block content %}
+{%if not request.session.info_box_dismissed %}
+<div class="alert alert-block alert-info">
+  <button type="button" class="close" data-dismiss="alert" onclick="dismiss_info_box();return false;">&times;</button>
+  <strong>Hallo!</strong> <br /><br />
+  Sozialfunk ist eine kollaborative Nachrichtenplattform rund um bürgerschaftliches Engagement. Wir präsentieren dir hier die wichtigsten <strong>Tweets</strong> von <i>Vereinen, Initiativen, NGOs, Stiftungen und Parteien</i> (<a href="{% url tweets.views.friends %}">unsere Quellen</a>). Du kannst selbst abstimmen, welche Inhalte du interessant findest und die Seite so mitgestalten. <a href="{% url tweets.views.dismiss_info_box %}" onclick="dismiss_info_box();return false;" data-dismiss="alert">(schließen)</a>
+</div>
+{%endif%}
 <div class="row-fluid">
     <div class="span12">
         <div class="btn-group">
@@ -113,9 +134,9 @@ function undo_upvote_tweet(tweet_id)
                 <p class="text">
                     <img src="{{tweet.twitter_data.user.profile_image_url}}" />
                     <span class="name">{%if tweet.twitter_data.user.url %}<a href="{{tweet.twitter_data.user.url}}">{{tweet.twitter_data.user.name}}</a>{%else%}{{tweet.twitter_data.user.name}}{%endif%}</span>
-                    {{tweet|get_html|safe}}
+                    {{tweet|tweet_text_as_html|safe}}
                     <span class="menu-right" id="tweet-upvote-{{tweet.id}}">
-                        {%if request.user.profile.twitter_screen_name in tweet.upvote_users%}
+                        {%if request.user.profile.twitter_screen_name in tweet.upvote_users or request.session.session_key in tweet.upvote_sessions %}
                             <a href="{% url tweets.views.undo_upvote tweet.id %}" onclick="undo_upvote_tweet('{{tweet.id}}');return false;"><i class="icon-thumbs-up icon-2x" style="color:#0a0"></i></a>
                         {% else %}
                             <a href="{% url tweets.views.upvote tweet.id %}" onclick="upvote_tweet('{{tweet.id}}');return false;"><i class="icon-thumbs-up icon-2x"></i></a>
@@ -123,7 +144,7 @@ function undo_upvote_tweet(tweet_id)
                     </span>
                 </p>
                 <p class="infos">
-                    {{tweet.created_at|human_readable_elapsed_time}} ago. {%if tweet.upvotes %}{{tweet.upvotes}} upvotes.{%endif%}
+                    Vor {{tweet.created_at|human_readable_elapsed_time}}. {%if tweet.upvotes %}{{tweet.upvotes}} Stimme(n).{%endif%}
                         <a onclick="get_tweet('{{tweet.id}}');return false;"><i class="icon-chevron-down"></i></a>
                     <br />
                     {%for category in categories %}

@@ -27,7 +27,7 @@ tweepy.models.User.first_parse = tweepy.models.User.parse
 tweepy.models.User.parse = parse
 
 
-@task
+@periodic_task(run_every=datetime.timedelta(seconds=600),default_retry_delay=10)
 def update_followers():
     preferences = workers_models.Preferences.collection.find_one({'application':'followers'})
 
@@ -74,25 +74,53 @@ def update_followers():
     print "We have %d followers so far" % tweets_models.Follower.collection.find().count()
  
 
-@task
+@periodic_task(run_every=datetime.timedelta(seconds=600),default_retry_delay= 10)
 def update_friends():
-    preferences = workers_models.Preferences.collection.find_one({'application':'followers'})
+    preferences = workers_models.Preferences.collection.find_one({'application':'friends'})
 
     if not preferences:
-        preferences = workers_models.Preferences(application = 'followers')
+        preferences = workers_models.Preferences(application = 'friends')
 
     auth = tweepy.OAuthHandler(global_settings.TWITTER.CONSUMER_KEY, global_settings.TWITTER.CONSUMER_KEY_SECRET)
     auth.set_access_token(global_settings.TWITTER.ACCESS_TOKEN, global_settings.TWITTER.ACCESS_TOKEN_SECRET)
 
     api = tweepy.API(auth)
 
-    print "Found %d new tweets" % len(tweets)
+    friends_ids_cursor = tweepy.Cursor(api.friends_ids)
 
-    if len(tweets):
-        preferences[since_id_key] = max(map(lambda x:x.id,tweets))
-    preferences.save()
+    friends_ids = []
 
-@periodic_task(run_every=datetime.timedelta(seconds=60),default_retry_delay= 10)
+    for friend_id in friends_ids_cursor.items():
+        friends_ids.append(friend_id)
+        if len(friends_ids) > 5000:
+            break
+
+    friends_ids = friends_ids[:200]
+
+    print len(friends_ids)
+
+    obsolete_friends_ids = map(lambda x:x['id'],tweets_models.Friend.collection.find({'id':{'$nin':friends_ids}}))
+    existing_friends_ids = map(lambda x:x['id'],tweets_models.Friend.collection.find({'id':{'$in':friends_ids}}))
+    new_friends_ids = [id for id in friends_ids if id not in existing_friends_ids]
+
+    print "%d obsolete friends, %d new friends and %d existing friends" % (len(obsolete_friends_ids),len(new_friends_ids),len(existing_friends_ids))
+
+    tweets_models.Friend.collection.remove({'id':{'$in':obsolete_friends_ids}})
+
+    i = 0
+    while i < len(new_friends_ids):
+        twitter_users = api.lookup_users(new_friends_ids[i:i+100])
+        for twitter_user in twitter_users:
+            friend = tweets_models.Friend.collection.find_one({'id':twitter_user.id})
+            if not friend:
+                friend = tweets_models.Friend(id = twitter_user.id,screen_name = twitter_user.screen_name)
+            friend['twitter_data'] = twitter_user.raw
+            friend.save()
+        i+=100
+
+    print "We have %d friends so far" % tweets_models.Friend.collection.find().count()
+
+@periodic_task(run_every=datetime.timedelta(seconds=120),default_retry_delay= 10)
 def update_timeline(timeline = 'home'):
     if timeline not in ['home','user','mentions','retweets']:
         raise Exception("Invalid timeline parameter!")

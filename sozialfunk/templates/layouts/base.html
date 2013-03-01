@@ -41,6 +41,7 @@
     <script type="text/javascript" src="http://twitter.github.com/bootstrap/assets/js/bootstrap-dropdown.js"></script>
     <script type="text/javascript" src="http://twitter.github.com/bootstrap/assets/js/bootstrap-affix.js"></script>
     <script type="text/javascript" src="http://twitter.github.com/bootstrap/assets/js/bootstrap-collapse.js"></script>
+    <script type="text/javascript" src="http://twitter.github.com/bootstrap/assets/js/bootstrap-alert.js"></script>
 
       {%block head_extra %}{%endblock%}
   </head>
@@ -58,6 +59,8 @@
           <a class="brand" href="/">Sozialfunk</a>
           <div class="nav-collapse">
             <ul class="nav">
+              <li><a href="{% url tweets.views.index %}">Neuigkeiten</a></li>
+              <li><a href="{% url tweets.views.friends %}">Quellen</a></li>
               {%if request.user.is_authenticated %}
               {% endif %}
             </ul>
