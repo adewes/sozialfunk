@@ -23,9 +23,29 @@ body,html
     width:40px;
 }
 
+.tweet .infos span.twitter-links
+{
+    display:none;
+}
+
+.tweet:hover .infos span.twitter-links
+{
+    display:inline;
+}
+
 .container
 {
     max-width:800px;
+}
+
+.green
+{
+    color:#0a0 !important;
+}
+
+.red
+{
+    color:#a00 !important;
 }
 
 .tweet i

@@ -32,9 +32,7 @@ import tweets.forms as forms
 import tweets.settings as settings
 
 import functools
-
 import tweepy
-
 import tweets.models as models
 
 def friends(request,category = ''):
@@ -136,17 +134,15 @@ def remove_from_category(request,tweet_id = 0,category = ''):
 def add_to_category(request,tweet_id = 0,category = ''):
     return _toggle_category(request,tweet_id,category,remove = False)
 
-def _verify_upvote_fields_are_present(request,tweet):
-    if request.user.is_authenticated():
-        if not 'upvote_users' in tweet:
-            tweet['upvote_users'] = []
-        if not 'upvotes' in tweet:
-            tweet['upvotes'] = 0
-    else:
-        if not 'upvote_sessions' in tweet:
-            tweet['upvote_sessions'] = []
-        if not 'anonymous_upvotes' in tweet:
-            tweet['anonymous_upvotes'] = 0
+def _verify_vote_fields_are_present(request,tweet):
+    if not 'upvote_users' in tweet:
+        tweet['upvote_users'] = []
+    if not 'downvote_users' in tweet:
+        tweet['downvote_users'] = []
+    if not 'upvotes' in tweet:
+        tweet['upvotes'] = 0
+    if not 'downvotes' in tweet:
+        tweet['downvotes'] = 0
 
 def count_click(request,tweet_id = 0,url = ''):
     tweet = models.Tweet.collection.find_one({'id':int(tweet_id)})
@@ -177,6 +173,7 @@ def count_click(request,tweet_id = 0,url = ''):
     tweet.save()
     return redirect(url)
 
+@login_required()
 def upvote(request,tweet_id = 0):
     tweet = models.Tweet.collection.find_one({'id':int(tweet_id)})
     if tweet == None:
@@ -184,21 +181,20 @@ def upvote(request,tweet_id = 0):
             return HttpResponse(json.dumps({'status':404}))
         else:
             raise Http404
-    _verify_upvote_fields_are_present(request,tweet)
-    if request.user.is_authenticated():
-        if not request.user.id in tweet['upvote_users']:
-            tweet['upvote_users'].append(request.user.id)
-            tweet['upvotes']+=1
-    else:
-        if not request.session.session_key in tweet['upvote_sessions']:
-            tweet['upvote_sessions'].append(request.session.session_key)
-            tweet['anonymous_upvotes']+=1
+    _verify_vote_fields_are_present(request,tweet)
+    if request.user.id in tweet['downvote_users']:
+        tweet['downvote_users'].remove(request.user.id)
+        tweet['downvotes']-=1
+    if not request.user.id in tweet['upvote_users']:
+        tweet['upvote_users'].append(request.user.id)
+        tweet['upvotes']+=1
     tweet.save()
     if request.accepts('application/json'):
         return HttpResponse(json.dumps({'status':200}))
     else:
         return redirect(index)
 
+@login_required()
 def undo_upvote(request,tweet_id = 0):
     tweet = models.Tweet.collection.find_one({'id':int(tweet_id)})
     if tweet == None:
@@ -206,15 +202,49 @@ def undo_upvote(request,tweet_id = 0):
             return HttpResponse(json.dumps({'status':404}))
         else:
             raise Http404
-    _verify_upvote_fields_are_present(request,tweet)
-    if request.user.is_authenticated():
-        if request.user.id in tweet['upvote_users']:
-            tweet['upvote_users'].remove(request.user.id)
-            tweet['upvotes']-=1
+    _verify_vote_fields_are_present(request,tweet)
+    if request.user.id in tweet['upvote_users']:
+        tweet['upvote_users'].remove(request.user.id)
+        tweet['upvotes']-=1
+    tweet.save()
+    if request.accepts('application/json'):
+        return HttpResponse(json.dumps({'status':200}))
     else:
-        if request.session.session_key in tweet['upvote_sessions']:
-            tweet['upvote_sessions'].remove(request.session.session_key)
-            tweet['anonymous_upvotes']-=1
+        return redirect(index)
+
+@login_required()
+def downvote(request,tweet_id = 0):
+    tweet = models.Tweet.collection.find_one({'id':int(tweet_id)})
+    if tweet == None:
+        if request.accepts('application/json'):
+            return HttpResponse(json.dumps({'status':404}))
+        else:
+            raise Http404
+    _verify_vote_fields_are_present(request,tweet)
+    if request.user.id in tweet['upvote_users']:
+        tweet['upvote_users'].remove(request.user.id)
+        tweet['upvotes']-=1
+    if not request.user.id in tweet['downvote_users']:
+        tweet['downvote_users'].append(request.user.id)
+        tweet['downvotes']+=1
+    tweet.save()
+    if request.accepts('application/json'):
+        return HttpResponse(json.dumps({'status':200}))
+    else:
+        return redirect(index)
+
+@login_required()
+def undo_downvote(request,tweet_id = 0):
+    tweet = models.Tweet.collection.find_one({'id':int(tweet_id)})
+    if tweet == None:
+        if request.accepts('application/json'):
+            return HttpResponse(json.dumps({'status':404}))
+        else:
+            raise Http404
+    _verify_vote_fields_are_present(request,tweet)
+    if request.user.id in tweet['downvote_users']:
+        tweet['downvote_users'].remove(request.user.id)
+        tweet['downvotes']-=1
     tweet.save()
     if request.accepts('application/json'):
         return HttpResponse(json.dumps({'status':200}))
@@ -226,9 +256,9 @@ def index(request,category = None):
     if category:
         if not category in settings.TWEET_CATEGORIES:
             raise PermissionDenied
-        tweets = models.Tweet.collection.find({'categories':{'$in':[category]}}).sort('created_at',-1)[:1000]
+        tweets = models.Tweet.collection.find({'categories':{'$in':[category]},'twitter_data.retweeted_status':{'$exists':False}}).sort('created_at',-1)[:1000]
     else:
-        tweets = models.Tweet.collection.find().sort('created_at',-1)[:1000]
+        tweets = models.Tweet.collection.find({'twitter_data.retweeted_status':{'$exists':False}}).sort('created_at',-1)[:1000]
     tweet_users = []
     filtered_tweets = []
     for tweet in tweets:

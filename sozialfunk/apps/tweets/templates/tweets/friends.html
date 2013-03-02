@@ -1,0 +1,93 @@
+{% extends "layouts/base.html" %}
+{% load tweets %}
+{%block head_extra%}
+<script lang="text/javascript" src="/static/js/scrollbar/tiny_scrollbar.js" charset="utf-8"></script>
+<script lang="text/javascript">
+
+{%if request.user.is_staff %}
+function add_to_category(friend_id,category)
+{
+    var jqxhr = $.ajax({
+        url:"{% url tweets.views.add_organization_to_category %}"+friend_id+"/"+category,
+        data:{},
+        type:'GET',
+        dataType:'json'})
+    .done(function(data) {
+        if (data['status'] = 200)
+        {
+            $("#friend-"+friend_id+"-"+category).html("<a href=\"{% url tweets.views.remove_organization_from_category %}"+friend_id+"/"+category+"\" onclick=\"remove_from_category('"+friend_id+"','"+category+"');return false;\"><span class=\"label label-success\">"+category+"</span></a>");
+        }
+    }
+    )
+}
+
+function remove_from_category(friend_id,category)
+{
+    var jqxhr = $.ajax({
+        url:"{% url tweets.views.remove_organization_from_category %}"+friend_id+"/"+category,
+        data:{},
+        type:'GET',
+        dataType:'json'})
+    .done(function(data) {
+        if (data['status'] = 200)
+        {
+            $("#friend-"+friend_id+"-"+category).html("<a href=\"{% url tweets.views.add_organization_to_category %}"+friend_id+"/"+category+"\" onclick=\"add_to_category('"+friend_id+"','"+category+"');return false;\"><span class=\"label\">"+category+"</span></a>");
+        }
+    }
+    )
+}
+{%endif%}
+
+</script>
+{%endblock%}
+
+{%block content %}
+<div class="row-fluid">
+    <div class="span12">
+        <div class="btn-group">
+          <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+            Kategorien: {%if selected_category %}{{selected_category}}{%else%} Alle{%endif%}
+            <span class="caret"></span>
+          </a>
+          <ul class="dropdown-menu">
+                {%if selected_category %}<li><a href="{% url tweets.views.friends %}">Alle anzeigen</a></li>{%endif%}
+            {% for category in categories%}
+                <li><a href="{% url tweets.views.friends category %}">{{category}}</a></li>
+            {%endfor%}
+          </ul>
+        </div>
+    </div>
+</div>
+<div class="row-fluid">
+    <div class="span12">
+        {%for friend in friends %}
+            <div class="tweet" id="friend-{{friend.id}}">
+                <p class="text">
+                    <img src="{{friend.twitter_data.profile_image_url}}" />
+                    <span class="name">{%if friend.twitter_data.url %}<a href="{{friend.twitter_data.url}}">{{friend.twitter_data.name}}</a>{%else%}{{friend.twitter_data.name}}{%endif%}</span>
+                    {%if friend.twitter_data.description%}{{friend.twitter_data.description|urlify|safe}}{%endif%}
+                </p>
+                <p class="infos">
+                    Followed since {{friend.created_at|human_readable_elapsed_time}} ago. 
+                        <a onclick="get_friend('{{friend.id}}');return false;"><i class="icon-chevron-down"></i></a>
+                    <br />
+                    {%for category in categories %}
+                        {%if request.user.is_staff %}
+                            {%if category in friend.categories %}
+                                <span id="friend-{{friend.document_id}}-{{category}}"><a onclick="remove_from_category('{{friend.document_id}}','{{category}}');return false;" href="{% url tweets.views.remove_organization_from_category friend.document_id category %}"><span class="label label-success">{{category}}</span></a></span>
+                            {%else%}
+                                <span id="friend-{{friend.document_id}}-{{category}}"><a onclick="add_to_category('{{friend.document_id}}','{{category}}');return false;" href="{% url tweets.views.add_organization_to_category friend.document_id category %}"><span class="label">{{category}}</span></a></span>
+                            {%endif%}
+                        {%else%}
+                            {%if category in friend.categories%}
+                                <span id="friend-{{friend.document_id}}-{{category}}"><span class="label label-success">{{category}}</span></span>
+                            {%endif%}
+                        {%endif%}
+                    {%endfor%}
+                </p>
+                <div class="details"></div>
+            </div>
+        {%endfor%}
+    </div>
+</div>
+{%endblock%}

@@ -1,0 +1,43 @@
+{%load tweets %}
+<div class="tweet" id="tweet-{{tweet.id}}">
+    <p class="text">
+        <a href="http://twitter.com/{{tweet.twitter_data.user.screen_name}}"><img src="{{tweet.twitter_data.user.profile_image_url}}" /></a>
+        <span class="name"><a href="http://twitter.com/{{tweet.twitter_data.user.screen_name}}">{{tweet.twitter_data.user.name}}</a> (<a href="http://twitter.com/{{tweet.twitter_data.user.screen_name}}">@{{tweet.twitter_data.user.screen_name}}</a>)</span>
+        {{tweet|tweet_text_as_html|safe}}
+        <span class="menu-right" id="tweet-votes-{{tweet.id}}">
+            {%if request.user.id in tweet.upvote_users %}
+                <a href="{% url tweets.views.undo_upvote tweet.id %}" onclick="undo_upvote_tweet('{{tweet.id}}');return false;"><i class="icon-chevron-up icon-2x green"></i></a>
+                <a href="{% url tweets.views.downvote tweet.id %}" onclick="downvote_tweet('{{tweet.id}}');return false;"><i class="icon-chevron-down icon-2x"></i></a>
+            {%elif request.user.id in tweet.downvote_users %}
+                <a href="{% url tweets.views.upvote tweet.id %}" onclick="upvote_tweet('{{tweet.id}}');return false;"><i class="icon-chevron-up icon-2x"></i></a>
+                <a href="{% url tweets.views.undo_downvote tweet.id %}" onclick="undo_downvote_tweet('{{tweet.id}}');return false;"><i class="icon-chevron-down icon-2x red"></i></a>
+            {% else %}
+                <a href="{% url tweets.views.upvote tweet.id %}" onclick="upvote_tweet('{{tweet.id}}');return false;"><i class="icon-chevron-up icon-2x"></i></a>
+                <a href="{% url tweets.views.downvote tweet.id %}" onclick="downvote_tweet('{{tweet.id}}');return false;"><i class="icon-chevron-down icon-2x"></i></a>
+            {% endif %}
+        </span>
+    </p>
+    <p class="infos">
+        <a href="https://twitter.com/{{tweet.twitter_data.user.screen_name}}/status/{{tweet.twitter_data.id}}">Vor {{tweet.created_at|human_readable_elapsed_time}}</a>.
+        <span class="twitter-links">
+        <a href="https://twitter.com/intent/tweet?in_reply_to={{tweet.twitter_data.id}}"><i class="icon-reply"></i></a>
+        <a href="https://twitter.com/intent/retweet?tweet_id={{tweet.twitter_data.id}}"><i class="icon-retweet"></i></a>
+        <a href="https://twitter.com/intent/favorite?tweet_id={{tweet.twitter_data.id}}"><i class="icon-star-empty"></i></a>
+        </span>
+        <br />
+        {%for category in categories %}
+            {%if request.user.is_staff %}
+                {%if category in tweet.categories %}
+                    <span id="tweet-{{tweet.id}}-{{category}}"><a onclick="remove_from_category('{{tweet.id}}','{{category}}');return false;" href="{% url tweets.views.remove_from_category tweet.id category %}"><span class="label label-success">{{category}}</span></a></span>
+                {%else%}
+                    <span id="tweet-{{tweet.id}}-{{category}}"><a onclick="add_to_category('{{tweet.id}}','{{category}}');return false;" href="{% url tweets.views.add_to_category tweet.id category %}"><span class="label">{{category}}</span></a></span>
+                {%endif%}
+            {%else%}
+                {%if category in tweet.categories%}
+                    <span id="tweet-{{tweet.id}}-{{category}}"><span class="label label-success">{{category}}</span></span>
+                {%endif%}
+            {%endif%}
+        {%endfor%}
+    </p>
+    <div class="details"></div>
+</div>

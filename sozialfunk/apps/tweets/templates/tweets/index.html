@@ -2,7 +2,14 @@
 {% load tweets %}
 {%block head_extra%}
 <script lang="text/javascript" src="/static/js/scrollbar/tiny_scrollbar.js" charset="utf-8"></script>
+<script type="text/javascript" src="http://platform.twitter.com/widgets.js"></script>
 <script lang="text/javascript">
+
+function count_click(tweet_id)
+{
+    target =  (event.target) ? event.target : ((event.currentTarget) ? event.currentTarget : event.srcElement);
+    alert(target);
+}
 
 function get_tweet(tweet_id)
 {
@@ -19,7 +26,22 @@ function get_tweet(tweet_id)
     )
 }
 
-function upvote_tweet(tweet_id)
+function vote_links(tweet_id,status)
+{
+    up_html = "<a href=\"{% url tweets.views.upvote %}"+tweet_id+"\" onclick=\"upvote_tweet('"+tweet_id+"');return false;\"><i class=\"icon-chevron-up icon-2x\"></i></a>"
+    down_html = "<a href=\"{% url tweets.views.downvote %}"+tweet_id+"\" onclick=\"downvote_tweet('"+tweet_id+"');return false;\"><i class=\"icon-chevron-down icon-2x\"></i></a>"
+    if (status == 'upvoted')
+    {
+        up_html = "<a href=\"{% url tweets.views.undo_upvote %}"+tweet_id+"\" onclick=\"undo_upvote_tweet('"+tweet_id+"');return false;\"><i class=\"icon-chevron-up icon-2x green\"></i></a>"
+    }
+    else if (status == 'downvoted')
+    {
+        down_html = "<a href=\"{% url tweets.views.undo_upvote %}"+tweet_id+"\" onclick=\"undo_downvote_tweet('"+tweet_id+"');return false;\"><i class=\"icon-chevron-down icon-2x red\"></i></a>"
+    }
+    return up_html+down_html
+}
+
+function upvote_tweet(tweet_id,up)
 {
 
     var jqxhr = $.ajax({
@@ -30,7 +52,56 @@ function upvote_tweet(tweet_id)
         .done(function(data) {
         if (data['status'] = 200)
         {
-            $("#tweet-upvote-"+tweet_id).html("<a href=\"{% url tweets.views.undo_upvote %}"+tweet_id+"\" onclick=\"undo_upvote_tweet('"+tweet_id+"');return false;\"><i class=\"icon-thumbs-up icon-2x\" style=\"color:#0a0\"></i></a>");
+            $("#tweet-votes-"+tweet_id).html(vote_links(tweet_id,'upvoted'));
+        }
+    }
+    )
+}
+
+function undo_upvote_tweet(tweet_id)
+{
+    var jqxhr = $.ajax({
+        url:"{% url tweets.views.undo_upvote %}"+tweet_id,
+        data:{},
+        type:'GET',
+        dataType:'json'})
+    .done(function(data) {
+        if (data['status'] = 200)
+        {
+            $("#tweet-votes-"+tweet_id).html(vote_links(tweet_id,'neutral'));
+        }
+    }
+    )
+}
+
+function downvote_tweet(tweet_id,up)
+{
+
+    var jqxhr = $.ajax({
+        url:"{% url tweets.views.downvote %}"+tweet_id,
+        data:{},
+        type:'GET',
+        dataType:'json'})
+        .done(function(data) {
+        if (data['status'] = 200)
+        {
+            $("#tweet-votes-"+tweet_id).html(vote_links(tweet_id,'downvoted'));
+        }
+    }
+    )
+}
+
+function undo_upvote_tweet(tweet_id)
+{
+    var jqxhr = $.ajax({
+        url:"{% url tweets.views.undo_downvote %}"+tweet_id,
+        data:{},
+        type:'GET',
+        dataType:'json'})
+    .done(function(data) {
+        if (data['status'] = 200)
+        {
+            $("#tweet-votes-"+tweet_id).html(vote_links(tweet_id,'neutral'));
         }
     }
     )
@@ -70,21 +141,6 @@ function remove_from_category(tweet_id,category)
 }
 {%endif%}
 
-function undo_upvote_tweet(tweet_id)
-{
-    var jqxhr = $.ajax({
-        url:"{% url tweets.views.undo_upvote %}"+tweet_id,
-        data:{},
-        type:'GET',
-        dataType:'json'})
-    .done(function(data) {
-        if (data['status'] = 200)
-        {
-            $("#tweet-upvote-"+tweet_id).html("<a href=\"{% url tweets.views.upvote %}"+tweet_id+"/+\" onclick=\"upvote_tweet('"+tweet_id+"');return false;\"><i class=\"icon-thumbs-up icon-2x\"></i></a>");
-        }
-    }
-    )
-}
 {%if not request.session.info_box_dismissed %}
 function dismiss_info_box()
 {
@@ -108,11 +164,12 @@ function dismiss_info_box()
 <div class="alert alert-block alert-info">
   <button type="button" class="close" data-dismiss="alert" onclick="dismiss_info_box();return false;">&times;</button>
   <strong>Hallo!</strong> <br /><br />
-  Sozialfunk ist eine kollaborative Nachrichtenplattform rund um bürgerschaftliches Engagement. Wir präsentieren dir hier die wichtigsten <strong>Tweets</strong> von <i>Vereinen, Initiativen, NGOs, Stiftungen und Parteien</i> (<a href="{% url tweets.views.friends %}">unsere Quellen</a>). Du kannst selbst abstimmen, welche Inhalte du interessant findest und die Seite so mitgestalten. <a href="{% url tweets.views.dismiss_info_box %}" onclick="dismiss_info_box();return false;" data-dismiss="alert">(schließen)</a>
+  Sozialfunk ist eine auf Twitter basierende, kollaborative Nachrichtenplattform für bürgerschaftliches Engagement. Wir präsentieren dir hier die wichtigsten <strong>Tweets</strong> von <i>Vereinen, Initiativen, NGOs, Stiftungen und Parteien</i> (<a href="{% url tweets.views.friends %}">unsere Quellen</a>). Du kannst selbst abstimmen, welche Inhalte du interessant findest und die Seite so mitgestalten. <a href="{% url tweets.views.dismiss_info_box %}" onclick="dismiss_info_box();return false;" data-dismiss="alert">(schließen)</a>
 </div>
 {%endif%}
 <div class="row-fluid">
     <div class="span12">
+  <a href="http://twitter.com"><img src="https://dev.twitter.com/sites/default/files/images_documentation/bird_blue_32.png" width="32" height="25" alt="" title="" /></a>
         <div class="btn-group">
           <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
             Kategorien: {%if selected_category %}{{selected_category}}{%else%} Alle{%endif%}
@@ -130,39 +187,7 @@ function dismiss_info_box()
 <div class="row-fluid">
     <div class="span12">
         {%for tweet in tweets %}
-            <div class="tweet" id="tweet-{{tweet.id}}">
-                <p class="text">
-                    <img src="{{tweet.twitter_data.user.profile_image_url}}" />
-                    <span class="name">{%if tweet.twitter_data.user.url %}<a href="{{tweet.twitter_data.user.url}}">{{tweet.twitter_data.user.name}}</a>{%else%}{{tweet.twitter_data.user.name}}{%endif%}</span>
-                    {{tweet|tweet_text_as_html|safe}}
-                    <span class="menu-right" id="tweet-upvote-{{tweet.id}}">
-                        {%if request.user.profile.twitter_screen_name in tweet.upvote_users or request.session.session_key in tweet.upvote_sessions %}
-                            <a href="{% url tweets.views.undo_upvote tweet.id %}" onclick="undo_upvote_tweet('{{tweet.id}}');return false;"><i class="icon-thumbs-up icon-2x" style="color:#0a0"></i></a>
-                        {% else %}
-                            <a href="{% url tweets.views.upvote tweet.id %}" onclick="upvote_tweet('{{tweet.id}}');return false;"><i class="icon-thumbs-up icon-2x"></i></a>
-                        {% endif %}
-                    </span>
-                </p>
-                <p class="infos">
-                    Vor {{tweet.created_at|human_readable_elapsed_time}}. {%if tweet.upvotes %}{{tweet.upvotes}} Stimme(n).{%endif%}
-                        <a onclick="get_tweet('{{tweet.id}}');return false;"><i class="icon-chevron-down"></i></a>
-                    <br />
-                    {%for category in categories %}
-                        {%if request.user.is_staff %}
-                            {%if category in tweet.categories %}
-                                <span id="tweet-{{tweet.id}}-{{category}}"><a onclick="remove_from_category('{{tweet.id}}','{{category}}');return false;" href="{% url tweets.views.remove_from_category tweet.id category %}"><span class="label label-success">{{category}}</span></a></span>
-                            {%else%}
-                                <span id="tweet-{{tweet.id}}-{{category}}"><a onclick="add_to_category('{{tweet.id}}','{{category}}');return false;" href="{% url tweets.views.add_to_category tweet.id category %}"><span class="label">{{category}}</span></a></span>
-                            {%endif%}
-                        {%else%}
-                            {%if category in tweet.categories%}
-                                <span id="tweet-{{tweet.id}}-{{category}}"><span class="label label-success">{{category}}</span></span>
-                            {%endif%}
-                        {%endif%}
-                    {%endfor%}
-                </p>
-                <div class="details"></div>
-            </div>
+            {%include "tweets/_tweet.html" with tweet=tweet %}
         {%endfor%}
     </div>
 </div>
