@@ -2,7 +2,7 @@
 <div class="tweet" id="tweet-{{tweet.id}}">
     <p class="text">
         <a href="http://twitter.com/{{tweet.twitter_data.user.screen_name}}"><img src="{{tweet.twitter_data.user.profile_image_url}}" /></a>
-        <span class="name"><a href="http://twitter.com/{{tweet.twitter_data.user.screen_name}}">{{tweet.twitter_data.user.name}}</a> (<a href="http://twitter.com/{{tweet.twitter_data.user.screen_name}}">@{{tweet.twitter_data.user.screen_name}}</a>)</span>
+        <span class="name"><a href="http://twitter.com/{{tweet.twitter_data.user.screen_name}}">{{tweet.twitter_data.user.name}}</a> (<a href="http://twitter.com/{{tweet.twitter_data.user.screen_name}}">@{{tweet.twitter_data.user.screen_name}}</a>)</span> 
         {{tweet|tweet_text_as_html|safe}}
         <span class="menu-right" id="tweet-votes-{{tweet.id}}">
             {%if request.user.id in tweet.upvote_users %}
@@ -18,7 +18,7 @@
         </span>
     </p>
     <p class="infos">
-        <a href="https://twitter.com/{{tweet.twitter_data.user.screen_name}}/status/{{tweet.twitter_data.id}}">Vor {{tweet.created_at|human_readable_elapsed_time}}</a>.
+        <a href="https://twitter.com/{{tweet.twitter_data.user.screen_name}}/status/{{tweet.twitter_data.id}}">Vor {{tweet.created_at|human_readable_elapsed_time}}</a>. 
         <span class="twitter-links">
         <a href="https://twitter.com/intent/tweet?in_reply_to={{tweet.twitter_data.id}}"><i class="icon-reply"></i></a>
         <a href="https://twitter.com/intent/retweet?tweet_id={{tweet.twitter_data.id}}"><i class="icon-retweet"></i></a>

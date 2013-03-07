@@ -1,4 +1,5 @@
 import mongobean.orm as orm
+import datetime
 
 class Statistics(orm.Document):
     pass
@@ -34,7 +35,9 @@ class Event(orm.Document):
     pass
 
 class Tweet(orm.Document):
-    pass
+
+    def tweet_created_at(self):
+        return datetime.datetime.strptime(self['twitter_data']['created_at'], '%a %b %d %H:%M:%S +0000 %Y')
 
 class Preferences(orm.Document):
     pass

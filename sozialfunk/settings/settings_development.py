@@ -21,7 +21,7 @@ djcelery.setup_loader()
 
 BROKER_URL = "amqp://sozialfunk:sozialfunk@localhost:5672/sozialfunk"
 CELERY_RESULT_BACKEND = "amqp"
-CELERY_IMPORTS = ("workers.tasks", )
+CELERY_IMPORTS = ("tweets.tasks", )
 CELERYD=PROJECT_PATH+"/../manage.py celeryd"
 
 DATABASES = {

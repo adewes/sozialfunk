@@ -5,7 +5,7 @@
 <script type="text/javascript" src="http://platform.twitter.com/widgets.js"></script>
 <script type="text/javascript" src="{% url tweets.js %}"></script>
 <script type="text/javascript">
-var load_tweets_url = "{% url tweets.views.index %}";
+var load_tweets_url = "{% url tweets.views.raw_timeline %}";
 </script>
 {%endblock%}
 
@@ -20,31 +20,19 @@ var load_tweets_url = "{% url tweets.views.index %}";
 <div class="row-fluid">
     <div class="span12">
   <a href="http://twitter.com"><img src="https://dev.twitter.com/sites/default/files/images_documentation/bird_blue_32.png" width="32" height="25" alt="" title="" /></a>
-        <div class="btn-group">
-          <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-            Kategorien: {%if selected_category %}{{selected_category}}{%else%} Alle{%endif%}
-            <span class="caret"></span>
-          </a>
-          <ul class="dropdown-menu">
-                {%if selected_category %}<li><a href="{% url tweets.views.index %}">Alle anzeigen</a></li>{%endif%}
-            {% for category in categories%}
-                <li><a href="{% url tweets.views.index category %}">{{category}}</a></li>
-            {%endfor%}
-          </ul>
-        </div>
     </div>
 </div>
 <div class="row-fluid">
     <div class="span12">
-        <div id="tweets">
-            {%for tweet in tweets %}
-                {%include "tweets/_tweet.html" with tweet=tweet %}
-            {%endfor%}
-        </div>
+      <div id="tweets">
+        {%for tweet in tweets %}
+            {%include "tweets/_tweet.html" with tweet=tweet %}
+        {%endfor%}
+      </div>
         <div id="tweets-loading">
         </div>
         <div id="tweets-nav">
-            <a href="{% url tweets.views.index%}?page={{next_page}}">more</a>
+            <a href="{% url tweets.views.raw_timeline%}?page={{next_page}}">more</a>
         </div>
     </div>
 </div>

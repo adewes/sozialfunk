@@ -30,6 +30,7 @@ from profiles.views import login_required
 
 import tweets.forms as forms
 import tweets.settings as settings
+import tweets.tasks as tasks
 
 import functools
 import tweepy
@@ -188,7 +189,10 @@ def upvote(request,tweet_id = 0):
     if not request.user.id in tweet['upvote_users']:
         tweet['upvote_users'].append(request.user.id)
         tweet['upvotes']+=1
+    if tweet['score'] == 0:
+        tweet['score'] = 1
     tweet.save()
+    tasks.update_score(tweet['id'])
     if request.accepts('application/json'):
         return HttpResponse(json.dumps({'status':200}))
     else:
@@ -207,6 +211,7 @@ def undo_upvote(request,tweet_id = 0):
         tweet['upvote_users'].remove(request.user.id)
         tweet['upvotes']-=1
     tweet.save()
+    tasks.update_score(tweet['id'])
     if request.accepts('application/json'):
         return HttpResponse(json.dumps({'status':200}))
     else:
@@ -228,6 +233,7 @@ def downvote(request,tweet_id = 0):
         tweet['downvote_users'].append(request.user.id)
         tweet['downvotes']+=1
     tweet.save()
+    tasks.update_score(tweet['id'])
     if request.accepts('application/json'):
         return HttpResponse(json.dumps({'status':200}))
     else:
@@ -246,29 +252,79 @@ def undo_downvote(request,tweet_id = 0):
         tweet['downvote_users'].remove(request.user.id)
         tweet['downvotes']-=1
     tweet.save()
+    tasks.update_score(tweet['id'])
     if request.accepts('application/json'):
         return HttpResponse(json.dumps({'status':200}))
     else:
         return redirect(index)
 
+def _render_tweets(request,tweets):
+    tweets_html = []
+    for tweet in tweets:
+        template = loader.get_template("tweets/_tweet.html")
+        context = RequestContext(request,{'tweet':tweet})
+        tweets_html.append(template.render(context))
+    return tweets_html
+
 def index(request,category = None):
     context = RequestContext(request)
+    if 'page' in request.GET:
+        try:
+            page = int(request.GET['page'])
+        except AttributeError:
+            page = 1
+    else:
+        page = 1
     if category:
         if not category in settings.TWEET_CATEGORIES:
             raise PermissionDenied
-        tweets = models.Tweet.collection.find({'categories':{'$in':[category]},'twitter_data.retweeted_status':{'$exists':False}}).sort('created_at',-1)[:1000]
+        tweets = models.Tweet.collection.find({'score':{'$gte':1},'categories':{'$in':[category]},'twitter_data.retweeted_status':{'$exists':False}}).sort('score',-1)
     else:
-        tweets = models.Tweet.collection.find({'twitter_data.retweeted_status':{'$exists':False}}).sort('created_at',-1)[:1000]
-    tweet_users = []
-    filtered_tweets = []
-    for tweet in tweets:
-        if tweet['twitter_data']['user']['screen_name'] in tweet_users:
-            continue
-        tweet_users.append(tweet['twitter_data']['user']['screen_name'])
-        filtered_tweets.append(tweet)
-        if len(filtered_tweets) >= 100:
-            break
-    return render_to_response('tweets/index.html', {'selected_category':category,'tweets':filtered_tweets,'categories':settings.TWEET_CATEGORIES},context)
+        tweets = models.Tweet.collection.find({'score':{'$gte':1},'twitter_data.retweeted_status':{'$exists':False}}).sort('score',-1)
+    filtered_tweets = tweets[settings.TWEETS_PER_PAGE*(page-1):settings.TWEETS_PER_PAGE*page]
+    if request.accepts('application/json'):
+        return HttpResponse(json.dumps({'status':200,'tweets_html':_render_tweets(request,filtered_tweets)}),mimetype="application/json")
+    else:
+        return render_to_response('tweets/index.html', {'next_page':page+1,'selected_category':category,'tweets':filtered_tweets,'categories':settings.TWEET_CATEGORIES},context)
+
+def raw_timeline(request,category = None):
+    context = RequestContext(request)
+    if 'page' in request.GET:
+        try:
+            page = int(request.GET['page'])
+        except AttributeError:
+            page = 1
+    else:
+        page = 1
+    if category:
+        if not category in settings.TWEET_CATEGORIES:
+            raise PermissionDenied
+    tweets = models.Tweet.collection.find({'timeline':'home','twitter_data.retweeted_status':{'$exists':False}}).sort('created_at',-1)
+    filtered_tweets = tweets[settings.TWEETS_PER_PAGE*(page-1):settings.TWEETS_PER_PAGE*page]
+    if request.accepts('application/json'):
+        return HttpResponse(json.dumps({'status':200,'tweets_html':_render_tweets(request,filtered_tweets)}),mimetype="application/json")
+    else:
+        return render_to_response('tweets/raw_timeline.html', {'next_page':page+1,'tweets':filtered_tweets},context)
+
+@login_required()
+def mentions(request,category = None):
+    context = RequestContext(request)
+    if 'page' in request.GET:
+        try:
+            page = int(request.GET['page'])
+        except AttributeError:
+            page = 1
+    else:
+        page = 1
+    if category:
+        if not category in settings.TWEET_CATEGORIES:
+            raise PermissionDenied
+    tweets = models.Tweet.collection.find({'timeline':'mentions','twitter_data.retweeted_status':{'$exists':False}}).sort('created_at',-1)
+    filtered_tweets = tweets[settings.TWEETS_PER_PAGE*(page-1):settings.TWEETS_PER_PAGE*page]
+    if request.accepts('application/json'):
+        return HttpResponse(json.dumps({'status':200,'tweets_html':_render_tweets(request,filtered_tweets)}),mimetype="application/json")
+    else:
+        return render_to_response('tweets/mentions.html', {'next_page':page+1,'tweets':filtered_tweets},context)
 
 
 def dismiss_info_box(request):
