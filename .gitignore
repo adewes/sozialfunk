@@ -1,4 +1,5 @@
 *.pyc
 *.~
+celerybeat-schedule
 tmp
 *.sql

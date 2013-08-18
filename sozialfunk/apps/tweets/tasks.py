@@ -27,7 +27,6 @@ tweepy.models.Status.parse = parse
 tweepy.models.User.first_parse = tweepy.models.User.parse
 tweepy.models.User.parse = parse
 
-
 @periodic_task(run_every=datetime.timedelta(seconds=600),default_retry_delay=10)
 def update_followers():
     preferences = models.Preferences.collection.find_one({'application':'followers'})
@@ -214,7 +213,7 @@ def update_timeline(timeline = 'home'):
         tweet_instance['twitter_data'] = tweet.raw
         tweet_instance['id'] = tweet.id
         tweet_instance['timeline'] = timeline
-        if timelime == 'home':
+        if timeline == 'home':
             tweet_instance['score'] = 1
         tweet_instance['created_at'] = tweet.created_at
         tweet_instance['user_id'] = tweet.user.id
